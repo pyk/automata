@@ -41,7 +41,12 @@ func (fn apiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		// response JSON
 		resp := json.NewEncoder(w)
-		resp.Encode(err)
+		err_json := resp.Encode(err)
+		if err_json != nil {
+			log.Println("Encode JSON for error response was failed.")
+
+			return
+		}
 
 		return
 	}

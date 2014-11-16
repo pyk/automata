@@ -14,7 +14,6 @@ var (
 )
 
 // apiError define structure of API error
-// TODO: API error response should return JSON
 type apiError struct {
 	Error   error  `json:"-"`
 	Message string `json:"error"`

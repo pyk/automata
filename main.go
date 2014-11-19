@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	PORT = os.Getenv("AUTOMATA_SERVER_PORT")
+	PORT = os.Getenv("PORT")
 )
 
 // apiError define structure of API error

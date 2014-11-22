@@ -1,16 +1,20 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
+
+	_ "github.com/lib/pq"
 )
 
 var (
-	PORT = os.Getenv("PORT")
+	PORT         = os.Getenv("PORT")
+	DATABASE_URL = os.Getenv("DATABASE_URL")
 )
 
 // apiError define structure of API error
@@ -51,7 +55,7 @@ func (fn apiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// http log
-	// TODO: print response status
+	// TODO: print response
 	log.Printf("%s %s %s", r.RemoteAddr, r.Method, r.URL)
 }
 
@@ -73,6 +77,22 @@ func index(w http.ResponseWriter, r *http.Request) *apiError {
 }
 
 func main() {
+
+	log.Println("Opening connection to database ... ")
+	db, err := sql.Open("postgres", DATABASE_URL)
+	if err != nil {
+		log.Println("Connection to database: failure :(")
+		log.Fatal(err)
+	}
+	log.Println("Connection to database: success!")
+
+	log.Println("Ping database connection ... ")
+	err = db.Ping()
+	if err != nil {
+		log.Println("Ping database connection: failure :(")
+		log.Fatal(err)
+	}
+	log.Println("Ping database connection: success!")
 
 	// register index handler
 	http.Handle("/", apiHandler(index))

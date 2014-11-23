@@ -81,10 +81,8 @@ func main() {
 	log.Println("Opening connection to database ... ")
 	db, err := sql.Open("postgres", DATABASE_URL)
 	if err != nil {
-		log.Println("Connection to database: failure :(")
 		log.Fatal(err)
 	}
-	log.Println("Connection to database: success!")
 
 	log.Println("Ping database connection ... ")
 	err = db.Ping()

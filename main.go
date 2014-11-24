@@ -76,6 +76,42 @@ func index(w http.ResponseWriter, r *http.Request) *apiError {
 	return nil
 }
 
+// TODO: define User type
+// users handle '/users' request
+// TODO: validate request header must Accept: application/json
+func users(w http.ResponseWriter, r *http.Request) *apiError {
+
+	switch r.Method {
+	case "GET":
+		return usersGET(w, r)
+	case "POST":
+		return usersPOST(w, r)
+	default:
+		return &apiError{
+			errors.New("Not Found"),
+			"Not Found",
+			http.StatusNotFound,
+		}
+	}
+	return nil
+}
+
+// usersGET handle 'GET' request on '/users'
+// TODO: query data from database
+func usersGET(w http.ResponseWriter, r *http.Request) *apiError {
+	fmt.Fprintln(w, "usersGET executed")
+
+	return nil
+}
+
+// usersPOST handle 'POST' request on '/users'
+// TODO: insert data into database
+func usersPOST(w http.ResponseWriter, r *http.Request) *apiError {
+	fmt.Fprintln(w, "usersPOST executed")
+
+	return nil
+}
+
 func main() {
 
 	log.Println("Opening connection to database ... ")
@@ -94,6 +130,7 @@ func main() {
 
 	// register index handler
 	http.Handle("/", apiHandler(index))
+	http.Handle("/users", apiHandler(users))
 
 	// server listener
 	log.Printf("Listening on :%s", PORT)

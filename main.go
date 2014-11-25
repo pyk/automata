@@ -77,6 +77,13 @@ func index(w http.ResponseWriter, r *http.Request) *apiError {
 }
 
 // TODO: define User type
+// User type
+type User struct {
+	Id    int    `json:"id"`
+	Name  string `json:"name"`
+	Email string `json:"email"`
+}
+
 // users handle '/users' request
 // TODO: validate request header must Accept: application/json
 func users(w http.ResponseWriter, r *http.Request) *apiError {
@@ -106,9 +113,25 @@ func usersGET(w http.ResponseWriter, r *http.Request) *apiError {
 
 // usersPOST handle 'POST' request on '/users'
 // TODO: insert data into database
+// TODO: accept data json with format like this
+// {"name": "bayu", "email": "bayu@gmail.com"}
+// TODO: decode received JSON -> insert data into database
 func usersPOST(w http.ResponseWriter, r *http.Request) *apiError {
-	fmt.Fprintln(w, "usersPOST executed")
 
+	// decode received JSON
+	var u User
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&u)
+	if err != nil {
+		return &apiError{
+			err,
+			"Internal server error",
+			http.StatusInternalServerError,
+		}
+	}
+
+	// TODO: insert data into database
+	// TODO: transfer var db ke sini
 	return nil
 }
 
@@ -129,6 +152,7 @@ func main() {
 	log.Println("Ping database connection: success!")
 
 	// register index handler
+	// TODO: transfer db var to handler
 	http.Handle("/", apiHandler(index))
 	http.Handle("/users", apiHandler(users))
 

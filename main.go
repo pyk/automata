@@ -134,14 +134,33 @@ func usersHandlerPOST(w http.ResponseWriter, r *http.Request, db *sql.DB) *apiEr
 	err := decoder.Decode(&u)
 	if err != nil {
 		return &apiError{
+			"usersHandlerPOST Decode",
 			err,
 			"Internal server error",
 			http.StatusInternalServerError,
 		}
 	}
 
-	// TODO: insert data into database
-	// TODO: transfer var db ke sini
+	// Insert data to database
+	stmt, err := db.Prepare("INSERT INTO users(name,email) VALUES ($1,$2)")
+	if err != nil {
+		return &apiError{
+			"usersHandlerPOST stmt",
+			err,
+			"Internal Server Error",
+			http.StatusInternalServerError,
+		}
+	}
+	_, err = stmt.Exec(u.Name, u.Email)
+	if err != nil {
+		return &apiError{
+			"usersHandlerPOST res",
+			err,
+			"Internal Server Error",
+			http.StatusInternalServerError,
+		}
+	}
+
 	return nil
 }
 
@@ -153,6 +172,7 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// Ping database connection to check connection are OK
 	log.Println("Ping database connection ... ")
 	err = db.Ping()
 	if err != nil {

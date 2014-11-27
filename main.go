@@ -24,17 +24,20 @@ type apiError struct {
 	Code    int    `json:"code"`
 }
 
-// apiHandler global API mux
-type apiHandler func(w http.ResponseWriter, r *http.Request) *apiError
+// ApiHandler global API mux
+type ApiHandler struct {
+	DB      *sql.DB
+	Handler func(w http.ResponseWriter, r *http.Request, db *sql.DB) *apiError
+}
 
-func (fn apiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (api ApiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// add header on every response
 	w.Header().Add("Server", "Automata/0.1")
 	w.Header().Add("Content-Type", "application/json; charset=utf-8")
 
 	// if handler return an &apiError
-	err := fn(w, r)
+	err := api.Handler(w, r, api.DB)
 	if err != nil {
 		// http log
 		log.Printf("%s %s %s [%s] %s", r.RemoteAddr, r.Method, r.URL, err.Tag, err.Error)
@@ -59,8 +62,8 @@ func (fn apiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	log.Printf("%s %s %s", r.RemoteAddr, r.Method, r.URL)
 }
 
-// index handle '/' request
-func index(w http.ResponseWriter, r *http.Request) *apiError {
+// indexHandler handle '/' request
+func indexHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) *apiError {
 
 	// response "404 not found" on every undefined
 	// URL pattern handler
@@ -73,12 +76,22 @@ func index(w http.ResponseWriter, r *http.Request) *apiError {
 		}
 	}
 
-	fmt.Fprintln(w, "Hello World! - automata.")
+	err := db.Ping()
+	if err != nil {
+		return &apiError{
+			"indexHandler db ping",
+			err,
+			"internal server error",
+			http.StatusInternalServerError,
+		}
+	}
+	log.Println("success ping database")
+
 	return nil
 }
 
-// TODO: define User type
 // User type
+// TODO: add more neede field
 type User struct {
 	Id    int    `json:"id"`
 	Name  string `json:"name"`
@@ -87,13 +100,13 @@ type User struct {
 
 // users handle '/users' request
 // TODO: validate request header must Accept: application/json
-func users(w http.ResponseWriter, r *http.Request) *apiError {
+func usersHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) *apiError {
 
 	switch r.Method {
 	case "GET":
-		return usersGET(w, r)
+		return usersHandlerGET(w, r, db)
 	case "POST":
-		return usersPOST(w, r)
+		return usersHandlerPOST(w, r, db)
 	default:
 		return &apiError{
 			"usersHandler default case",
@@ -105,20 +118,15 @@ func users(w http.ResponseWriter, r *http.Request) *apiError {
 	return nil
 }
 
-// usersGET handle 'GET' request on '/users'
+// usersHandlerGET handle 'GET' request on '/users'
 // TODO: query data from database
-func usersGET(w http.ResponseWriter, r *http.Request) *apiError {
-	fmt.Fprintln(w, "usersGET executed")
+func usersHandlerGET(w http.ResponseWriter, r *http.Request, db *sql.DB) *apiError {
 
 	return nil
 }
 
-// usersPOST handle 'POST' request on '/users'
-// TODO: insert data into database
-// TODO: accept data json with format like this
-// {"name": "bayu", "email": "bayu@gmail.com"}
-// TODO: decode received JSON -> insert data into database
-func usersPOST(w http.ResponseWriter, r *http.Request) *apiError {
+// usersHandlerPOST handle 'POST' request on '/users'
+func usersHandlerPOST(w http.ResponseWriter, r *http.Request, db *sql.DB) *apiError {
 
 	// decode received JSON
 	var u User
@@ -153,10 +161,16 @@ func main() {
 	}
 	log.Println("Ping database connection: success!")
 
-	// register index handler
-	// TODO: transfer db var to handler
-	http.Handle("/", apiHandler(index))
-	http.Handle("/users", apiHandler(users))
+	// TODO: aku pengen API nya kaya gini
+	// api.NewDB(db) -> register database
+	// api.Handler(indexHandler) -> register handler
+	// api.Handler(user) -> register handler
+	// akan tetapi DB bisa diakses oleh setiap
+	// handler
+
+	// Register handler
+	http.Handle("/", ApiHandler{db, indexHandler})
+	http.Handle("/users", ApiHandler{db, usersHandler})
 
 	// server listener
 	log.Printf("Listening on :%s", PORT)

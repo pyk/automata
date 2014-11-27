@@ -18,6 +18,7 @@ var (
 
 // apiError define structure of API error
 type apiError struct {
+	Tag     string `json:"-"`
 	Error   error  `json:"-"`
 	Message string `json:"error"`
 	Code    int    `json:"code"`
@@ -36,7 +37,7 @@ func (fn apiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	err := fn(w, r)
 	if err != nil {
 		// http log
-		log.Printf("%s %s %s %s", r.RemoteAddr, r.Method, r.URL, err.Error)
+		log.Printf("%s %s %s [%s] %s", r.RemoteAddr, r.Method, r.URL, err.Tag, err.Error)
 
 		// response proper http status code
 		w.WriteHeader(err.Code)
@@ -65,6 +66,7 @@ func index(w http.ResponseWriter, r *http.Request) *apiError {
 	// URL pattern handler
 	if r.URL.Path != "/" {
 		return &apiError{
+			"indexHandler url",
 			errors.New("Not Found"),
 			"Not Found",
 			http.StatusNotFound,
@@ -94,6 +96,7 @@ func users(w http.ResponseWriter, r *http.Request) *apiError {
 		return usersPOST(w, r)
 	default:
 		return &apiError{
+			"usersHandler default case",
 			errors.New("Not Found"),
 			"Not Found",
 			http.StatusNotFound,
